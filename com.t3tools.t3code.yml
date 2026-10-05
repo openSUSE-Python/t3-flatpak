@@ -18,6 +18,13 @@ finish-args:
   - --share=network
   - --env=GTK_USE_PORTAL=1
   - --env=XCURSOR_PATH=/run/host/user-share/icons:/run/host/share/icons # This is used to show the correct cursor on Wayland
+  # Without home access, $HOME inside the sandbox is a tmpfs that is discarded
+  # on exit. Map the home-relative state dirs that ignore XDG onto persistent
+  # app storage (~/.var/app/com.t3tools.t3code/<dir>). No host paths are exposed.
+  - --persist=.t3 # T3 Code settings, state DB, auth tokens, secrets, worktrees
+  - --persist=.codex # Codex CLI
+  - --persist=.claude # Claude Code (startt3code points CLAUDE_CONFIG_DIR here)
+  - --persist=.ssh # sandbox-local SSH keys and known_hosts
 
 modules:
   - name: nodejs

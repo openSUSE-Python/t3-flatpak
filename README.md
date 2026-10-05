@@ -52,9 +52,39 @@ sandbox. That code can access T3 Code app data and any project paths explicitly
 mounted into the Flatpak later. It does not gain broad host filesystem access
 unless you grant it.
 
+## Persistent data
+
+Without home directory access, `$HOME` inside the sandbox is a temporary
+filesystem that is discarded when T3 Code exits. Only
+`~/.var/app/com.t3tools.t3code` and explicitly granted project paths survive.
+The package therefore maps every state location T3 Code and its tools use into
+that app directory:
+
+| Inside the sandbox | Stored on the host | Contents | Mechanism |
+|---|---|---|---|
+| `~/.t3` | `~/.var/app/com.t3tools.t3code/.t3` | T3 Code settings, keybindings, threads (`state.sqlite`), login tokens, secrets, worktrees | `--persist=.t3` |
+| `~/.codex` | `~/.var/app/com.t3tools.t3code/.codex` | Codex CLI config and auth | `--persist=.codex` |
+| `~/.claude` | `~/.var/app/com.t3tools.t3code/.claude` | Claude Code config, including `.claude.json` | `--persist=.claude` + `CLAUDE_CONFIG_DIR` |
+| `~/.ssh` | `~/.var/app/com.t3tools.t3code/.ssh` | sandbox-local SSH keys, `known_hosts` | `--persist=.ssh` |
+| `$XDG_CONFIG_HOME/git/config` | `~/.var/app/com.t3tools.t3code/config/git/config` | `git config --global` settings | launcher creates the file so git prefers it over `~/.gitconfig` |
+| `$HISTFILE` | `~/.var/app/com.t3tools.t3code/.local/state/bash/history` | terminal shell history | launcher sets `HISTFILE` |
+| `$XDG_CONFIG_HOME`, `$XDG_DATA_HOME`, `$XDG_CACHE_HOME` | `~/.var/app/com.t3tools.t3code/{config,data,cache}` | Electron profile, OpenCode, npm globals and cache | Flatpak default |
+
+These are separate from the host's `~/.t3`, `~/.codex`, `~/.claude`, `~/.ssh`
+and `~/.gitconfig`; the sandbox never reads the host copies. If you grant
+`--filesystem=home`, Flatpak ignores `--persist` and the host directories are
+used instead.
+
+T3 Code worktrees live under `~/.t3/worktrees` inside the sandbox. Host-side
+git sees those worktree paths as missing, so `git worktree prune` on the host
+(which `git gc` also runs for entries older than `gc.worktreePruneExpire`,
+three months by default) would drop their metadata. Manage those worktrees
+from inside T3 Code.
+
 ## Project access
 
-T3 Code's private app data lives under `~/.var/app/com.t3tools.t3code`. The
+T3 Code's private app data lives under `~/.var/app/com.t3tools.t3code` (see
+[Persistent data](#persistent-data)). The
 default Flatpak sandbox does not grant access to your repositories.
 
 For persistent access to one project directory, add a narrow user override:

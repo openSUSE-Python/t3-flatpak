@@ -41,7 +41,7 @@ This package is intended to work well on secureblue. Do not weaken secureblue de
 
 Implementation notes:
 
-- Keep all app state in Flatpak paths such as `~/.var/app/com.t3tools.t3code`.
+- Keep all app state in Flatpak paths such as `~/.var/app/com.t3tools.t3code`. Without home access, `$HOME` is a tmpfs discarded on exit, so tools that write to fixed home-relative paths (`~/.t3`, `~/.codex`, `~/.claude`, `~/.ssh`) need `--persist=<dir>` or an env var redirecting them into XDG dirs.
 - If the app needs a temp dir, use `XDG_RUNTIME_DIR` as the current launcher already does.
 - Force portal-backed file picking with `GTK_USE_PORTAL=1`.
 - Add `x-scheme-handler/t3code` to the installed desktop file, and remove the upstream `x-scheme-handler/t3code-dev` entry, so the exported Flatpak desktop file owns the `t3code:` cloud auth callback. T3 Code still calls `setAsDefaultProtocolClient` unconditionally; inside the sandbox that only writes a desktop entry and `mimeapps.list` into the app's private XDG directories, which the host never reads. (An earlier `T3CODE_DESKTOP_PROTOCOL_REGISTRATION_MANAGED=1` variable was dropped because no T3 Code release reads it.)
