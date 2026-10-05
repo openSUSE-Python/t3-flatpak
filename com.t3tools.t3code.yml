@@ -16,6 +16,7 @@ finish-args:
   - --socket=fallback-x11
   - --share=ipc
   - --share=network
+  - --talk-name=org.freedesktop.Flatpak
   - --env=GTK_USE_PORTAL=1
   - --env=XCURSOR_PATH=/run/host/user-share/icons:/run/host/share/icons # This is used to show the correct cursor on Wayland
   # Without home access, $HOME inside the sandbox is a tmpfs that is discarded

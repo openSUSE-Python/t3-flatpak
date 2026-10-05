@@ -14,7 +14,9 @@ socket.
 
 The default sandbox grants display, IPC, network, portal-based file picking, and
 cursor theme access. It does not grant access to the full home directory, SSH
-agent, host command spawning, or broad host filesystems. The host's `~/.ssh`,
+agent or broad host filesystems. It grants D-Bus access to
+`org.freedesktop.Flatpak`, which permits host command spawning through Flatpak.
+The host's `~/.ssh`,
 `~/.gnupg`, and `~/.local/bin` are mounted read-only for SSH/GPG credentials and
 user-installed tools.
 

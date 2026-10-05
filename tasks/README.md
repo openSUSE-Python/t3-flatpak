@@ -15,7 +15,7 @@ Project direction:
 - Prefer a sandboxed Flatpak with its own filesystem.
 - Do not use `flatpak-spawn` host wrappers.
 - Do not grant `--filesystem=home` by default. The manifest grants read-only access only to host `~/.ssh`, `~/.gnupg`, and `~/.local/bin`.
-- Do not add `--talk-name=org.freedesktop.Flatpak`.
+- Grant `--talk-name=org.freedesktop.Flatpak` by default for Flatpak host integration.
 - Add project directory access later through explicit per-path Flatpak overrides.
 
 Current implementation notes:
