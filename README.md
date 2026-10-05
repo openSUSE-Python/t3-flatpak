@@ -14,14 +14,16 @@ socket.
 
 The default sandbox grants display, IPC, network, portal-based file picking, and
 cursor theme access. It does not grant access to the full home directory, SSH
-agent, host command spawning, or broad host filesystems.
+agent, host command spawning, or broad host filesystems. The host's `~/.ssh`,
+`~/.gnupg`, and `~/.local/bin` are mounted read-only for SSH/GPG credentials and
+user-installed tools.
 
 Provider CLIs can be installed into app data with the sandbox-local helper below.
 Project directory access still requires an explicit per-path override.
 
 ## Sandbox runtime tools
 
-The Flatpak bundles sandbox-local `node`, `npm`, `npx`, `corepack`, `git`, and OpenSSH client tools. These are real binaries inside `/app`, not host wrappers. The manifest does not add `flatpak-spawn`, `--filesystem=home`, `--socket=ssh-auth`, or broad host filesystem access to make them work.
+The Flatpak bundles sandbox-local `node`, `npm`, `npx`, `corepack`, `git`, OpenSSH client tools, and the `gh`, `glab`, and `tea` hosting CLIs. These are real binaries inside `/app`, not host wrappers. The launcher also includes the read-only host `~/.local/bin` in `PATH`. The manifest does not add `flatpak-spawn`, `--filesystem=home`, `--socket=ssh-auth`, or broad host filesystem access.
 
 The launcher configures npm globals and cache under T3 Code app data:
 
@@ -65,15 +67,17 @@ that app directory:
 | `~/.t3` | `~/.var/app/com.t3tools.t3code/.t3` | T3 Code settings, keybindings, threads (`state.sqlite`), login tokens, secrets, worktrees | `--persist=.t3` |
 | `~/.codex` | `~/.var/app/com.t3tools.t3code/.codex` | Codex CLI config and auth | `--persist=.codex` |
 | `~/.claude` | `~/.var/app/com.t3tools.t3code/.claude` | Claude Code config, including `.claude.json` | `--persist=.claude` + `CLAUDE_CONFIG_DIR` |
-| `~/.ssh` | `~/.var/app/com.t3tools.t3code/.ssh` | sandbox-local SSH keys, `known_hosts` | `--persist=.ssh` |
 | `$XDG_CONFIG_HOME/git/config` | `~/.var/app/com.t3tools.t3code/config/git/config` | `git config --global` settings | launcher creates the file so git prefers it over `~/.gitconfig` |
 | `$HISTFILE` | `~/.var/app/com.t3tools.t3code/.local/state/bash/history` | terminal shell history | launcher sets `HISTFILE` |
 | `$XDG_CONFIG_HOME`, `$XDG_DATA_HOME`, `$XDG_CACHE_HOME` | `~/.var/app/com.t3tools.t3code/{config,data,cache}` | Electron profile, OpenCode, npm globals and cache | Flatpak default |
 
-These are separate from the host's `~/.t3`, `~/.codex`, `~/.claude`, `~/.ssh`
-and `~/.gitconfig`; the sandbox never reads the host copies. If you grant
-`--filesystem=home`, Flatpak ignores `--persist` and the host directories are
-used instead.
+The app-specific state is separate from the host's `~/.t3`, `~/.codex`,
+`~/.claude`, and `~/.gitconfig`. The host's `~/.ssh`, `~/.gnupg`, and
+`~/.local/bin` are intentional exceptions: they are visible read-only inside
+the sandbox, and `~/.local/bin` is included in `PATH`. T3 Code and subprocesses
+can read credentials and execute tools in these directories, but cannot modify
+them through these mounts. If you grant `--filesystem=home`, Flatpak ignores
+`--persist` and uses the host home directly.
 
 T3 Code worktrees live under `~/.t3/worktrees` inside the sandbox. Host-side
 git sees those worktree paths as missing, so `git worktree prune` on the host
@@ -109,6 +113,30 @@ flatpak override --user --show com.t3tools.t3code
 Mounted project paths are visible to T3 Code and any sandbox-local tools it runs,
 including terminals and provider CLIs. Broad `home` or `host` filesystem grants
 are intentionally not recommended.
+
+## Building locally
+
+There is no `INSTALL.md`; this README is the project documentation. To build the x86_64 Flatpak bundle locally, install Podman and run the Flathub Flatpak build image from the repository root. The named `t3-flatpak-build` volume keeps Flatpak's SDK, build state, and OSTree repository between runs. The generated bundle is written to `out/t3code.flatpak`.
+
+```bash
+mkdir -p out
+podman run --rm --privileged \
+  -v "$PWD":/src:ro \
+  -v "$PWD/out":/out \
+  -v t3-flatpak-build:/build \
+  -e FLATPAK_USER_DIR=/build/flatpak \
+  ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-26.08 \
+  sh -euxc '
+    flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+    flatpak-builder --user --force-clean --install-deps-from=flathub --disable-rofiles-fuse \
+      --state-dir=/build/state --repo=/build/repo \
+      /build/builddir /src/com.t3tools.t3code.yml
+    flatpak build-bundle /build/repo /out/t3code.flatpak com.t3tools.t3code master \
+      --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo
+  '
+```
+
+The container needs network access to Flathub and the upstream source hosts. `--privileged` is required by the supplied build image for its Flatpak build setup. `--force-clean` recreates the build directory, while cached downloads and the repository remain in the named volume. To start with a fresh cache and build repository, remove that volume with `podman volume rm t3-flatpak-build` after stopping other builds that use it.
 
 ## Installation and automatic updates
 

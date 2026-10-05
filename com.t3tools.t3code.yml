@@ -19,12 +19,14 @@ finish-args:
   - --env=GTK_USE_PORTAL=1
   - --env=XCURSOR_PATH=/run/host/user-share/icons:/run/host/share/icons # This is used to show the correct cursor on Wayland
   # Without home access, $HOME inside the sandbox is a tmpfs that is discarded
-  # on exit. Map the home-relative state dirs that ignore XDG onto persistent
-  # app storage (~/.var/app/com.t3tools.t3code/<dir>). No host paths are exposed.
+  # on exit. Map app state dirs that ignore XDG onto persistent app storage;
+  # expose only selected host tool/key directories, and only read-only.
   - --persist=.t3 # T3 Code settings, state DB, auth tokens, secrets, worktrees
   - --persist=.codex # Codex CLI
   - --persist=.claude # Claude Code (startt3code points CLAUDE_CONFIG_DIR here)
-  - --persist=.ssh # sandbox-local SSH keys and known_hosts
+  - --filesystem=~/.ssh:ro
+  - --filesystem=~/.gnupg:ro
+  - --filesystem=~/.local/bin:ro
 
 modules:
   - name: nodejs
@@ -51,6 +53,37 @@ modules:
       - type: archive
         url: https://mirrors.edge.kernel.org/pub/software/scm/git/git-2.54.0.tar.xz
         sha256: f689162364c10de79ef89aa8dbf48731eb057e34edbbd20aca510ce0154681a3
+
+  - name: gh
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 bin/gh /app/bin/gh
+    sources:
+      - type: archive
+        url: https://github.com/cli/cli/releases/download/v2.102.0/gh_2.102.0_linux_amd64.tar.gz
+        sha256: bb766f710eef8ede859c18578c72c327597cd4c8a85b06001b1f3843c6019386
+        only-arches: [x86_64]
+
+  - name: glab
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 "$(find . -type f -name glab -print -quit)" /app/bin/glab
+    sources:
+      - type: archive
+        url: https://gitlab.com/gitlab-org/cli/-/releases/v1.120.0/downloads/glab_1.120.0_linux_amd64.tar.gz
+        sha256: 4e6c59de9f7ed2f304bf93aad01ea8f8a69584f0450ce90ad696ef81f69c69aa
+        only-arches: [x86_64]
+
+  - name: tea
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 tea-0.16.0-linux-amd64 /app/bin/tea
+    sources:
+      - type: file
+        url: https://gitea.com/gitea/tea/releases/download/v0.16.0/tea-0.16.0-linux-amd64
+        dest-filename: tea-0.16.0-linux-amd64
+        sha256: 9c142c8a0b31485eea2387031c1c404f12b7141075eb4ffbd7ced49441590636
+        only-arches: [x86_64]
 
   - name: openssh
     buildsystem: simple
