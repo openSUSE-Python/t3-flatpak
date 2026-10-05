@@ -116,7 +116,7 @@ are intentionally not recommended.
 
 ## Building locally
 
-There is no `INSTALL.md`; this README is the project documentation. To build the x86_64 Flatpak bundle locally, install Podman and run the Flathub Flatpak build image from the repository root. The named `t3-flatpak-build` volume keeps Flatpak's SDK, build state, and OSTree repository between runs. The generated bundle is written to `out/t3code.flatpak`.
+To build the x86_64 Flatpak bundle locally, install Podman and run the Flathub Flatpak build image from the repository root. The named `t3-flatpak-build` volume keeps Flatpak's SDK, build state, and OSTree repository between runs. The generated bundle is written to `out/t3code.flatpak`.
 
 ```bash
 mkdir -p out
