@@ -14,7 +14,6 @@ Keep:
 - --share=ipc
 - --share=network
 - --env=GTK_USE_PORTAL=1
-- --env=T3CODE_DESKTOP_PROTOCOL_REGISTRATION_MANAGED=1
 - --env=XCURSOR_PATH=/run/host/user-share/icons:/run/host/share/icons
 ```
 
@@ -45,7 +44,8 @@ Implementation notes:
 - Keep all app state in Flatpak paths such as `~/.var/app/com.t3tools.t3code`.
 - If the app needs a temp dir, use `XDG_RUNTIME_DIR` as the current launcher already does.
 - Force portal-backed file picking with `GTK_USE_PORTAL=1`.
-- Add `x-scheme-handler/t3code` to the installed desktop file and set `T3CODE_DESKTOP_PROTOCOL_REGISTRATION_MANAGED=1`, so the Flatpak desktop file owns the `t3code:` cloud auth callback instead of the app trying to self-register it.
+- Add `x-scheme-handler/t3code` to the installed desktop file, and remove the upstream `x-scheme-handler/t3code-dev` entry, so the exported Flatpak desktop file owns the `t3code:` cloud auth callback. T3 Code still calls `setAsDefaultProtocolClient` unconditionally; inside the sandbox that only writes a desktop entry and `mimeapps.list` into the app's private XDG directories, which the host never reads. (An earlier `T3CODE_DESKTOP_PROTOCOL_REGISTRATION_MANAGED=1` variable was dropped because no T3 Code release reads it.)
+- T3 Code calls `app.setDesktopName("com.t3tools.T3Code.desktop")`, which Electron also uses as the Wayland `app_id`. The build rewrites that name to `com.t3tools.t3code.desktop` inside `app.asar` so compositors can match the window to the exported desktop entry.
 - If provider CLIs are unavailable, that is acceptable for this phase.
 - If project files are unavailable, that is acceptable for this phase.
 
