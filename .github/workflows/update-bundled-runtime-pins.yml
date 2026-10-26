@@ -19,7 +19,6 @@ permissions:
 concurrency:
   group: update-bundled-runtime-pins
   cancel-in-progress: false
-
 jobs:
   update:
     name: Check bundled runtime pins
