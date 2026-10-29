@@ -11,6 +11,15 @@ command: startt3code
 branch: master
 separate-locales: false
 
+# Check the finished /app tree before exporting any repository or bundle.
+cleanup-commands:
+  - |
+    set -eu
+    for cli in gh glab gt; do
+      test -x "/app/bin/$cli"
+      "/app/bin/$cli" --version
+    done
+
 add-extensions:
   com.t3tools.t3code.Tools:
     directory: tools
@@ -92,15 +101,15 @@ modules:
         sha256: 4e6c59de9f7ed2f304bf93aad01ea8f8a69584f0450ce90ad696ef81f69c69aa
         only-arches: [x86_64]
 
-  - name: tea
+  - name: gt
     buildsystem: simple
     build-commands:
-      - install -Dm755 tea-0.16.0-linux-amd64 /app/bin/tea
+      - install -Dm755 gitea-cli-0.2.0-linux-amd64 /app/bin/gt
     sources:
       - type: file
-        url: https://gitea.com/gitea/tea/releases/download/v0.16.0/tea-0.16.0-linux-amd64
-        dest-filename: tea-0.16.0-linux-amd64
-        sha256: 9c142c8a0b31485eea2387031c1c404f12b7141075eb4ffbd7ced49441590636
+        url: https://gitea.com/gitea/cli/releases/download/v0.2.0/gitea-cli-0.2.0-linux-amd64
+        dest-filename: gitea-cli-0.2.0-linux-amd64
+        sha256: 220f329cbc08f55f623aa0814000eabab2fe76271c57ffb12fdb6311ab358e36
         only-arches: [x86_64]
 
   - name: openssh
