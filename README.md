@@ -22,7 +22,7 @@ Project directory access still requires an explicit per-path override.
 
 ## Sandbox runtime tools
 
-The Flatpak bundles sandbox-local `node`, `npm`, `npx`, `corepack`, `git`, OpenSSH client tools, and the `gh`, `glab`, and `tea` hosting CLIs. These are real binaries inside `/app`, not host wrappers. The launcher does not add host `~/.local/bin` to `PATH`. The manifest does not grant host command execution, home access, or SSH-agent access.
+The Flatpak bundles sandbox-local `node`, `npm`, `npx`, `corepack`, `git`, GNU make, OpenSSH client tools, and the `gh`, `glab`, and `gt` hosting CLIs. `gt` is [Gitea CLI](https://gitea.com/gitea/cli), not Graphite. These are real binaries inside `/app`, not host wrappers. Before export, the build checks that all three hosting CLIs exist in `/app/bin` and can print their versions. Managed commands precede optional extension commands in `PATH`, without adding host `~/.local/bin`. The manifest does not grant host command execution, home access, or SSH-agent access.
 
 The launcher configures npm globals and cache under T3 Code app data:
 
